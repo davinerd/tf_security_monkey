@@ -1,3 +1,9 @@
+# What
+This is a Terraform module to help spinning Security Monkey
+[https://github.com/Netflix/security_monkey](https://github.com/Netflix/security_monkey)
+in AWS.
+Also, a packer template file is provided to build an AMI ready to use.
+
 # Prerequisite
 To successfully build the Security Monkey infrastructure you need to manually
 create the following AWS resources:
@@ -15,7 +21,7 @@ you can setup the env variable `SECMONKEY_API_PORT`.
 
 After that, you can type `bash build-ami.sh` inside the `packer` directory.
 
-# HOW TO: Using the module
+# Using the module
 ## Input
 * `monkey_name` - Infrastructure's name
 * `vpc_id` - ID of the VPC where to spin Security Monkey
