@@ -1,0 +1,61 @@
+{
+  "min_packer_version": "0.12.0",
+  "variables"         : {
+    "aws_profile"     : "{{env `AWS_PROFILE`}}",
+    "api_port"        : "{{env `SECMONKEY_API_PORT`}}",
+    "aws_region"      : "{{env `AWS_REGION`}}"
+  },
+  "builders": [
+    {
+    "profile"          : "{{user `aws_profile`}}",
+    "ami_name"         : "security_monkey-{{isotime | clean_ami_name}}",
+    "name"             : "security_monkey",
+    "ami_description"  : "An Ubuntu AMI with Security Monkey installed.",
+    "instance_type"    : "t2.small",
+    "type"             : "amazon-ebs",
+    "region"           : "{{user `aws_region`}}",
+    "source_ami_filter": {
+      "filters": {
+        "virtualization-type"             : "hvm",
+        "name"                            : "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*",
+        "root-device-type"                : "ebs"
+      },
+      "owners"     : ["099720109477"],
+      "most_recent": true
+    },
+    "encrypt_boot" : true,
+    "ssh_username": "ubuntu",
+    "tags": {
+      "Name": "securitymonkey"
+    }
+  }
+],
+  "provisioners": [
+    {
+      "type"        : "file",
+      "source"      : "./files/setup.sh",
+      "destination" : "/tmp/"
+    },
+    {
+      "type"        : "shell",
+      "inline"      : [
+        "sudo systemctl stop apt-daily.service",
+        "sudo systemctl stop apt-daily.timer",
+        "sleep 30",
+        "sudo apt-get update",
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' dist-upgrade",
+        "sudo apt-get -y install python-pip python-dev python-psycopg2 libpq-dev nginx supervisor git libffi-dev gcc python-virtualenv"
+      ]
+    },
+    {
+      "environment_vars" : [
+        "API_PORT={{user `api_port`}}"
+      ],
+      "type"      : "shell",
+      "inline"    : [
+        "bash /tmp/setup.sh",
+        "rm -rf /tmp/setup.sh"
+      ]
+    }
+  ]
+}
